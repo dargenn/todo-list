@@ -1,0 +1,1 @@
+Aplikacja przedstawiajaca podstawowe operacje na bazie danych.
