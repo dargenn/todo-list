@@ -1,6 +1,6 @@
 import Expo, {SQLite} from 'expo';
 import React from 'react';
-import {StyleSheet, Text, View, TextInput, TouchableOpacity} from 'react-native';
+import {StyleSheet, Text, View, TextInput, TouchableOpacity,  Button} from 'react-native';
 
 const db = SQLite.openDatabase('db.db');
 
@@ -31,7 +31,7 @@ class Items extends React.Component {
                             borderColor: 'black',
                             borderWidth: 1,
                         }}>
-                        <Text>{value}</Text>
+                        <Text style={{fontSize: 20}}>{value}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -43,6 +43,16 @@ class Items extends React.Component {
             tx.executeSql(
                 `select * from items where done = ?;`,
                 [this.props.done ? 1 : 0],
+                (_, {rows: {_array}}) => this.setState({items: _array})
+            );
+        });
+    }
+
+    update2(text2) {
+        db.transaction(tx => {
+            tx.executeSql(
+                `select * from items where value like ?;`,
+                [text2],
                 (_, {rows: {_array}}) => this.setState({items: _array})
             );
         });
@@ -83,6 +93,27 @@ export default class App extends React.Component {
                         onSubmitEditing={() => {
                             this.add(this.state.text);
                             this.setState({text: null});
+                        }}
+                    />
+                </View>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                    }}>
+                    <TextInput
+                        style={{
+                            flex: 1,
+                            padding: 5,
+                            height: 40,
+                            borderColor: 'orange',
+                            borderWidth: 1,
+                        }}
+                        placeholder="filter..."
+                        value={this.state.text2}
+                        onChangeText={text2 => this.setState({text2})}
+                        onSubmitEditing={() => {
+                            this.filter(this.state.text2);
+                            this.setState({text2: null});
                         }}
                     />
                 </View>
@@ -129,9 +160,26 @@ export default class App extends React.Component {
         );
     }
 
+    filter(text2) {
+        db.transaction(
+            tx => {
+                tx.executeSql('select * from items where value = ?',[text2], (_, {rows}) =>
+                    console.log(JSON.stringify(rows))
+                );
+            },
+            null,
+            this.update2(text2)
+        );
+    }
+
     update = () => {
         this.todo && this.todo.update();
         this.done && this.done.update();
+    };
+
+    update2(text2){
+        this.todo && this.todo.update2(text2);
+        //this.done && this.done.update2(text2);
     };
 }
 
